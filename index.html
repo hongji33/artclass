@@ -173,7 +173,7 @@
 <body>
   <!-- ===================== SIDEBAR ===================== -->
   <aside class="sidebar">
-    <div class="brand">
+    <div class="brand" onclick="goMain()" style="cursor:pointer;" title="홈으로">
       <span class="logo">🎨</span>
       <div>
         <h1>즐거운 미술시간</h1>
@@ -551,6 +551,9 @@
         <h3>3️⃣ 직접 그림 만들기 ✨</h3>
         <p class="lead" style="margin-bottom:12px;">아래 칸에 만들고 싶은 그림을 한국어(또는 영어)로 써넣고 버튼을 눌러보세요. 잠시 기다리면 AI가 진짜 그림을 그려줍니다!</p>
         <textarea id="genPrompt" rows="2" placeholder="예: 달빛 아래 바닷속을 헤엄치는 귀여운 고양이, 수채화 스타일" style="width:100%; padding:12px; border:2px solid var(--line); border-radius:12px; font-size:14px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+        <div class="note" style="margin-top:10px; background:#fff0f0; border-color:#ffc9c9; color:#c92a2a;">
+          ⚠️ <b>이름·학교·주소·연락처 같은 개인정보는 입력하지 마세요!</b> 입력한 글은 그림을 만들기 위해 외부 AI 서버로 전송돼요. 그리고 싶은 그림만 적어요.
+        </div>
         <div class="row" style="margin-top:10px;">
           <button class="btn warm" onclick="genImage()">🎨 그림 만들기</button>
           <button class="btn ghost" onclick="useBuiltPrompt()">⬆️ 위에서 만든 주문 가져오기</button>
@@ -893,6 +896,7 @@ function go(tab, btn, sub){
   if(sub==='value'){ drawSphere(); initLightLab(); updVal(); }
   if(sub==='comp'){ initOp(); refreshCompActivities(); }
 }
+function goMain(){ go('home', document.querySelector('[data-tab="home"]')); window.scrollTo(0,0); }
 function homeGo(tab){
   if(tab==='play'){
     document.getElementById('sub-play').classList.add('open');
@@ -1228,7 +1232,7 @@ function genImage(){
   status.textContent='🎨 AI가 그림을 그리는 중이에요... (10~20초 정도 걸려요)';
   img.style.display='none'; acts.style.display='none';
   genSeed=(genSeed+7)%99999;
-  const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=640&height=640&nologo=true&seed='+genSeed;
+  const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=640&height=640&nologo=true&safe=true&seed='+genSeed;
   img.onload=()=>{ status.textContent='✅ 완성! 마음에 안 들면 버튼을 다시 눌러 새로 만들어요.'; img.style.display='inline-block'; acts.style.display='block'; document.getElementById('genDownload').href=url; };
   img.onerror=()=>{ status.textContent='⚠️ 지금은 그림을 못 만들었어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'; };
   img.src=url;
