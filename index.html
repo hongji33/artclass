@@ -779,10 +779,17 @@
     <!-- ============ 전시회 ============ -->
     <section class="page" id="page-expo">
       <h2>🖼️ 전시회 정보</h2>
-      <p class="lead">직접 미술관에 가면 화면으로 볼 때와는 다른 감동이 있어요. 2026년 눈여겨볼 전시를 모았어요.</p>
+      <p class="lead">직접 미술관에 가면 화면으로 볼 때와는 다른 감동이 있어요. 지금 가볼 만한 전시를 확인해요.</p>
 
       <div class="card">
-        <h3>🗓️ 2026년 주요 전시 (예시)</h3>
+        <h3>🔄 지금 열리는 전시 <span style="font-size:12px;color:var(--muted);font-weight:600;">(매주 자동 갱신 · 문화정보 API)</span></h3>
+        <div id="expoTabs" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
+        <div id="expoStatus" style="color:var(--muted); font-size:14px; margin-bottom:10px;">전시 정보를 불러오는 중...</div>
+        <div id="expoList" class="grid g2"></div>
+      </div>
+
+      <div class="card">
+        <h3>🗓️ 참고 — 2026년 주요 전시 (예시)</h3>
         <table class="info">
           <tr><th>미술관</th><th>전시</th><th>기간</th></tr>
           <tr><td>국립현대미술관 서울</td><td>데미언 허스트 개인전</td><td>3.20 ~ 6.28</td></tr>
@@ -882,6 +889,7 @@ function go(tab, btn, sub){
     if(tab==='color'){}
     if(tab==='value') drawSphere();
     if(tab==='ai') buildPrompt();
+    if(tab==='expo') loadExpo();
     return;
   }
   // play submenu click
@@ -1620,7 +1628,39 @@ function delGallery(i){ gallery.splice(i,1); renderGallery(); }
 function viewGallery(i){ document.getElementById('lbImg').src=gallery[i]; document.getElementById('lightbox').classList.add('open'); }
 (function(){ const gb=document.getElementById('galleryBtn'); if(gb) gb.onclick=addToGallery; })();
 
+/* ============ 전시 정보 (자동 갱신 exhibitions.json) ============ */
+let expoData=null, expoRegion='전체';
+function expEsc(s){ return (s==null?'':''+s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function loadExpo(){
+  fetch('exhibitions.json',{cache:'no-store'}).then(r=>{ if(!r.ok)throw 0; return r.json(); })
+    .then(d=>{ expoData=d; expoRegion='전체'; renderExpoTabs(); renderExpo();
+      document.getElementById('expoTabs').style.display='flex';
+      document.getElementById('expoStatus').textContent='📅 갱신일: '+(d.updated||'-')+' · 총 '+((d.items||[]).length)+'건';
+    })
+    .catch(()=>{
+      const t=document.getElementById('expoTabs'); if(t)t.style.display='none';
+      const s=document.getElementById('expoStatus'); if(s)s.innerHTML='ℹ️ 아직 자동 전시 데이터가 없어요. 아래 <b>참고 전시</b>와 미술관 링크를 이용하세요. (GitHub에 올린 뒤 자동 갱신이 처음 실행되면 여기에 최신 전시가 지역별로 표시돼요.)';
+      const l=document.getElementById('expoList'); if(l)l.innerHTML='';
+    });
+}
+function renderExpoTabs(){
+  const regions=['전체'].concat(expoData.regions||[]);
+  document.getElementById('expoTabs').innerHTML=regions.map(r=>'<button class="tbtn'+(r===expoRegion?' sel':'')+'" onclick="setExpoRegion(\''+r+'\')">'+expEsc(r)+'</button>').join('');
+}
+function setExpoRegion(r){ expoRegion=r; renderExpoTabs(); renderExpo(); }
+function renderExpo(){
+  const items=(expoData.items||[]).filter(it=>expoRegion==='전체'||it.region===expoRegion);
+  const box=document.getElementById('expoList');
+  if(!items.length){ box.innerHTML='<p style="color:var(--muted);">이 지역에는 등록된 전시가 없어요.</p>'; return; }
+  box.innerHTML=items.map(it=>
+    '<div class="tile"><h4>'+expEsc(it.title)+'</h4>'+
+    '<p>📍 '+expEsc(it.place||'-')+'<br>📅 '+expEsc(it.period||'-')+'<br>🏷️ '+expEsc(it.region||'')+(it.realm?' · '+expEsc(it.realm):'')+'</p>'+
+    (it.url?'<a class="btn ghost" style="margin-top:10px;" href="'+expEsc(it.url)+'" target="_blank" rel="noopener">자세히 보기</a>':'')+
+    '</div>').join('');
+}
+
 /* 초기화 */
+loadExpo();
 drawWheel();
 setMixMode('pig');
 renderArtists();
