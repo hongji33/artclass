@@ -2165,17 +2165,16 @@ function openLesson(g,i){ const l=(LESSONS[g]||[])[i]; if(!l)return; curGrade=g;
   if(l.goals&&l.goals.length) h+='<div class="lsec"><h3>🎯 수업 목표</h3><ul>'+l.goals.map(x=>'<li>'+expEsc(x)+'</li>').join('')+'</ul></div>';
   (l.sections||[]).forEach(s=>{ h+='<div class="lsec"><h3>'+expEsc(s.h)+'</h3><p>'+expEsc(s.body)+'</p></div>'; });
   if(l.activity) h+='<div class="activity-box"><div class="lbl">✨ 오늘의 활동</div><h3>'+expEsc(l.activity.title)+'</h3><p>'+expEsc(l.activity.desc||'')+'</p><button class="startbtn" onclick="startActivity()">오늘의 활동 시작 →</button></div>';
-  h+='<div class="aihelp"><h3>🤖 AI 미술 선생님</h3><p style="font-size:13px;color:var(--muted);margin:2px 0 0;">이 수업 내용을 바탕으로 도와줘요. (선생님이 정한 수업 범위 안에서만 답해요.)</p>'+
+  h+='<div class="aihelp"><h3>🎨 학습 도우미</h3><p style="font-size:13px;color:var(--muted);margin:2px 0 0;">이 수업을 더 잘 이해하도록 도와줘요. 아래 버튼을 눌러보세요.</p>'+
      '<div class="aichips"><button class="aichip" onclick="aiEasy()">💡 쉽게 설명해줘</button><button class="aichip" onclick="aiThink()">🤔 생각해보기</button>'+
      (l.viewing&&l.viewing.length?'<button class="aichip" onclick="aiViewing()">👀 작품 감상 도우미</button>':'')+
      (l.quiz&&l.quiz.length?'<button class="aichip" onclick="aiQuiz()">🧠 3분 퀴즈</button>':'')+
      '<button class="aichip" onclick="aiIdea()">🎨 작품 아이디어</button></div>'+
-     '<div class="row" style="margin-bottom:10px;"><input id="aiQ" class="in" style="flex:1;min-width:180px;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;" placeholder="AI 선생님에게 물어보세요 (예: 현대미술이 왜 어려워?)" onkeydown="if(event.key===\'Enter\')aiAsk()"><button class="btn" onclick="aiAsk()">질문하기</button></div>'+
-     '<div id="aiOut">궁금한 걸 물어보거나 위 버튼을 눌러보세요.</div>'+
-     '<div class="note" style="margin-top:10px;">🧑‍🏫 AI 답변은 도우미예요. 정확하지 않을 수 있으니 선생님·교과서와 함께 확인해요.</div></div>';
+     '<div id="aiOut">위 버튼을 눌러 이 수업을 더 깊이 알아보세요.</div>'+
+     '<div class="note" style="margin-top:10px;">🧑‍🏫 그림을 직접 만들어보고 싶으면 왼쪽 "AI 미술 체험"에서 글로 설명해 이미지를 만들 수 있어요.</div></div>';
   document.getElementById('lessonBody').innerHTML=h; window.scrollTo(0,0);
 }
-function startActivity(){ const o=document.getElementById('aiOut'); const box=document.querySelector('#classDetail .aihelp'); if(box)box.scrollIntoView({behavior:'smooth'}); if(curLesson.activity) o.textContent='✏️ 오늘의 활동: '+curLesson.activity.title+'\n\n'+(curLesson.activity.desc||'')+'\n\n막히면 아래 버튼이나 질문으로 AI 선생님의 도움을 받아보세요!'; }
+function startActivity(){ const o=document.getElementById('aiOut'); const box=document.querySelector('#classDetail .aihelp'); if(box)box.scrollIntoView({behavior:'smooth'}); if(curLesson.activity) o.textContent='✏️ 오늘의 활동: '+curLesson.activity.title+'\n\n'+(curLesson.activity.desc||'')+'\n\n막히면 아래 "쉽게 설명해줘·생각해보기" 버튼의 도움을 받아보세요!'; }
 function aiEasy(){ document.getElementById('aiOut').textContent='💡 쉽게 설명하면요\n\n'+(curLesson.easy||'이 수업의 쉬운 설명은 곧 추가돼요.'); }
 function aiThink(){ const t=curLesson.think||[]; document.getElementById('aiOut').textContent='🤔 생각해보기\n\n'+(t.length?t.map((x,i)=>(i+1)+'. '+x).join('\n'):'생각거리가 곧 추가돼요.'); }
 function aiViewing(){ const v=curLesson.viewing||[]; document.getElementById('aiOut').textContent='👀 작품을 볼 때 이렇게 물어봐요\n\n'+(v.length?v.map((x,i)=>(i+1)+'. '+x).join('\n'):'감상 질문이 곧 추가돼요.'); }
@@ -2187,42 +2186,6 @@ function aiQuiz(){ const q=curLesson.quiz||[]; const box=document.getElementById
 function lessonQuizAns(qi,oi){ const st=window._lq; if(!st)return; const item=st.q[qi]; const btns=document.querySelectorAll('#aiOut .qopt[data-q="'+qi+'"]'); if(!btns.length||btns[0].disabled)return;
   btns.forEach((b,i)=>{ b.disabled=true; if(i===item.ans)b.classList.add('correct'); if(i===oi&&oi!==item.ans)b.classList.add('wrong'); });
   if(oi===item.ans)st.score++; st.done++; if(st.done===st.q.length) document.getElementById('lqScore').textContent='🎉 '+st.q.length+'문제 중 '+st.score+'개 정답!';
-}
-function aiClean(t){ t=(t||'').trim();
-  // 모델이 가끔 붙이는 군더더기 제거
-  t=t.replace(/^```[a-z]*\n?/i,'').replace(/```$/,'').trim();
-  t=t.replace(/^(선생님\s*답변|답변|assistant|답)\s*[:：]\s*/i,'').trim();
-  return t;
-}
-function aiAsk(){ const inp=document.getElementById('aiQ'); const q=(inp.value||'').trim(); const out=document.getElementById('aiOut');
-  if(!q){ out.textContent='궁금한 점을 입력해 주세요.'; return; }
-  // 수업 내용(문맥)은 너무 길지 않게 잘라서 전달
-  let ctx=curLesson.title+'. '+(curLesson.intro||'')+' '+(curLesson.sections||[]).map(s=>s.h+' '+s.body).join(' ');
-  ctx=ctx.replace(/\s+/g,' ').slice(0,1200);
-  const sys='너는 친절한 중학교 미술 선생님이야. 규칙: '
-    +'① 아래 [수업 내용] 범위 안에서만 답한다. '
-    +'② 중학생이 이해하기 쉬운 말로, 2~4문장, 한국어로만 답한다. '
-    +'③ 질문을 그대로 따라 쓰거나 "선생님 답변:" 같은 말머리를 붙이지 않는다. '
-    +'④ 새로운 수업을 지어내지 않는다. '
-    +'⑤ 수업과 관련 없는 질문이면 "그건 이번 미술 수업 내용은 아니에요. 대신 이런 걸 물어보면 좋아요: …" 라고 부드럽게 안내한다.\n'
-    +'[수업 내용] '+ctx;
-  out.textContent='🤖 AI 선생님이 생각 중이에요...';
-  const okShow=t=>{ const c=aiClean(t); out.textContent=c||'답을 받지 못했어요. 다시 한 번 물어봐 주세요.'; };
-  const failShow=()=>{ out.textContent='지금은 AI 답변을 불러오지 못했어요. 잠시 후 다시 시도하거나, 위의 "쉽게 설명해줘·생각해보기" 버튼을 이용해 보세요.'; };
-  // 1차: POST 방식(역할 구분·모델 지정) — 가장 안정적
-  fetch('https://text.pollinations.ai/',{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ model:'openai', temperature:0.4, private:true, referrer:'artclass',
-      messages:[{role:'system',content:sys},{role:'user',content:q}] })
-  }).then(r=>r.ok?r.text():Promise.reject()).then(t=>{
-    let s=t;
-    try{ const j=JSON.parse(t); s=(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||j.content||j.text||t; }catch(e){}
-    okShow(s);
-  }).catch(()=>{
-    // 2차: GET 방식으로 재시도(예비)
-    const url='https://text.pollinations.ai/'+encodeURIComponent(sys+'\n\n학생 질문: '+q)+'?model=openai&private=true&referrer=artclass';
-    fetch(url).then(r=>r.ok?r.text():Promise.reject()).then(okShow).catch(failShow);
-  });
 }
 
 /* 초기화 */
