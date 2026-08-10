@@ -2188,12 +2188,41 @@ function lessonQuizAns(qi,oi){ const st=window._lq; if(!st)return; const item=st
   btns.forEach((b,i)=>{ b.disabled=true; if(i===item.ans)b.classList.add('correct'); if(i===oi&&oi!==item.ans)b.classList.add('wrong'); });
   if(oi===item.ans)st.score++; st.done++; if(st.done===st.q.length) document.getElementById('lqScore').textContent='🎉 '+st.q.length+'문제 중 '+st.score+'개 정답!';
 }
+function aiClean(t){ t=(t||'').trim();
+  // 모델이 가끔 붙이는 군더더기 제거
+  t=t.replace(/^```[a-z]*\n?/i,'').replace(/```$/,'').trim();
+  t=t.replace(/^(선생님\s*답변|답변|assistant|답)\s*[:：]\s*/i,'').trim();
+  return t;
+}
 function aiAsk(){ const inp=document.getElementById('aiQ'); const q=(inp.value||'').trim(); const out=document.getElementById('aiOut');
   if(!q){ out.textContent='궁금한 점을 입력해 주세요.'; return; }
-  const ctx=curLesson.title+'. '+(curLesson.sections||[]).map(s=>s.h+' '+s.body).join(' ');
-  const sys='너는 친절한 중학교 미술 선생님이야. 아래 수업 내용 범위 안에서만, 중학생이 이해하기 쉽게 2~4문장으로 한국어로 답해줘. 수업 주제에서 벗어나거나 새로운 수업을 지어내지 마. 수업 내용: '+ctx;
+  // 수업 내용(문맥)은 너무 길지 않게 잘라서 전달
+  let ctx=curLesson.title+'. '+(curLesson.intro||'')+' '+(curLesson.sections||[]).map(s=>s.h+' '+s.body).join(' ');
+  ctx=ctx.replace(/\s+/g,' ').slice(0,1200);
+  const sys='너는 친절한 중학교 미술 선생님이야. 규칙: '
+    +'① 아래 [수업 내용] 범위 안에서만 답한다. '
+    +'② 중학생이 이해하기 쉬운 말로, 2~4문장, 한국어로만 답한다. '
+    +'③ 질문을 그대로 따라 쓰거나 "선생님 답변:" 같은 말머리를 붙이지 않는다. '
+    +'④ 새로운 수업을 지어내지 않는다. '
+    +'⑤ 수업과 관련 없는 질문이면 "그건 이번 미술 수업 내용은 아니에요. 대신 이런 걸 물어보면 좋아요: …" 라고 부드럽게 안내한다.\n'
+    +'[수업 내용] '+ctx;
   out.textContent='🤖 AI 선생님이 생각 중이에요...';
-  fetch('https://text.pollinations.ai/'+encodeURIComponent(sys+'\n\n학생 질문: '+q+'\n선생님 답변:')).then(r=>r.ok?r.text():Promise.reject()).then(t=>{ out.textContent=(t||'').trim()||'답을 받지 못했어요. 다시 시도해 주세요.'; }).catch(()=>{ out.textContent='지금은 AI 답변을 불러오지 못했어요. 인터넷 연결을 확인하거나, 위의 "쉽게 설명해줘·생각해보기" 버튼을 이용해 보세요.'; });
+  const okShow=t=>{ const c=aiClean(t); out.textContent=c||'답을 받지 못했어요. 다시 한 번 물어봐 주세요.'; };
+  const failShow=()=>{ out.textContent='지금은 AI 답변을 불러오지 못했어요. 잠시 후 다시 시도하거나, 위의 "쉽게 설명해줘·생각해보기" 버튼을 이용해 보세요.'; };
+  // 1차: POST 방식(역할 구분·모델 지정) — 가장 안정적
+  fetch('https://text.pollinations.ai/',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ model:'openai', temperature:0.4, private:true, referrer:'artclass',
+      messages:[{role:'system',content:sys},{role:'user',content:q}] })
+  }).then(r=>r.ok?r.text():Promise.reject()).then(t=>{
+    let s=t;
+    try{ const j=JSON.parse(t); s=(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||j.content||j.text||t; }catch(e){}
+    okShow(s);
+  }).catch(()=>{
+    // 2차: GET 방식으로 재시도(예비)
+    const url='https://text.pollinations.ai/'+encodeURIComponent(sys+'\n\n학생 질문: '+q)+'?model=openai&private=true&referrer=artclass';
+    fetch(url).then(r=>r.ok?r.text():Promise.reject()).then(okShow).catch(failShow);
+  });
 }
 
 /* 초기화 */
