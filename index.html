@@ -307,7 +307,7 @@
       <li><button class="item" data-tab="market" onclick="go('market',this)"><span class="emoji">💰</span> 현재 미술시장</button></li>
       <li><button class="item" data-tab="artist" onclick="go('artist',this)"><span class="emoji">⭐</span> 추천 화가·디자이너</button></li>
       <li><button class="item" data-tab="expo" onclick="go('expo',this)"><span class="emoji">🖼️</span> 전시회 정보</button></li>
-      <li><button class="item" data-tab="material" onclick="go('material',this)"><span class="emoji">🎨</span> 미술 재료</button></li>
+      <li><button class="item" data-tab="materials" onclick="go('materials',this)"><span class="emoji">🎨</span> 미술 재료</button></li>
     </ul>
   </aside>
 
@@ -349,7 +349,7 @@
           <span class="hemoji">🖼️</span><h4>전시회 정보</h4>
           <p>지금 가볼 만한 미술 전시를 확인해요</p>
         </div>
-        <div class="home-card" style="border-top-color:#ff6b6b;" onclick="homeGo('material')">
+        <div class="home-card" style="border-top-color:#ff6b6b;" onclick="homeGo('materials')">
           <span class="hemoji">🎨</span><h4>미술 재료</h4>
           <p>파스텔부터 클레이까지, 미술 재료의 모든 것!</p>
         </div>
@@ -918,6 +918,26 @@
           <a class="btn ghost" href="https://www.leeumhoam.org" target="_blank" rel="noopener">리움미술관</a>
         </div>
         <div class="note" style="margin-top:12px;">🎫 많은 미술관이 <b>청소년 할인·무료 관람일</b>을 운영해요. 방문 전에 확인하면 알뜰하게 감상할 수 있어요!</div>
+      </div>
+    </section>
+
+    <!-- ============ 미술 재료 ============ -->
+    <section class="page" id="page-materials">
+      <h2>🎨 미술 재료</h2>
+      <p class="lead">파스텔부터 클레이까지, 미술 재료의 모든 것을 배워봐요. 각 재료의 특징, 사용법, 활용 사례를 확인하세요.</p>
+
+      <div class="card">
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" id="materialSearch" placeholder="재료명, 카테고리 검색..." style="flex:1; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px;" onkeyup="searchMaterials()">
+          <button onclick="showMaterialsList()" style="padding:10px 16px; background:var(--accent2); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">목록</button>
+        </div>
+      </div>
+
+      <div id="materialGrid" class="grid g3" style="margin-top:14px;"></div>
+
+      <div id="materialDetail" style="display:none;">
+        <button onclick="showMaterialsList()" style="margin-bottom:14px; padding:10px 16px; background:var(--accent2); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">← 목록으로 돌아가기</button>
+        <div id="detailContent"></div>
       </div>
     </section>
 
