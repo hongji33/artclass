@@ -227,7 +227,17 @@
   #page-seat.board .group{gap:12px; padding:14px;}
   .seat-input{padding:7px 9px; border:1px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit;}
 
-  /* ===== 미술 재료 ===== */
+  function showPlaySub(subName){
+  const subs = document.querySelectorAll('.sub-play');
+  subs.forEach(sub => {
+    if(sub.dataset.sub === subName){
+      sub.style.display = 'block';
+    } else {
+      sub.style.display = 'none';
+    }
+  });
+}
+/* ===== 미술 재료 ===== */
   .material-search{margin-bottom:24px;}
   .search-box{display:flex; gap:10px;}
   .search-input{flex:1; padding:12px 14px; border:1px solid var(--line); border-radius:12px; font-size:14px; font-family:inherit;}
@@ -338,6 +348,10 @@
         <div class="home-card" style="border-top-color:#1971c2;" onclick="homeGo('expo')">
           <span class="hemoji">🖼️</span><h4>전시회 정보</h4>
           <p>지금 가볼 만한 미술 전시를 확인해요</p>
+        </div>
+        <div class="home-card" style="border-top-color:#ff6b6b;" onclick="homeGo('material')">
+          <span class="hemoji">🎨</span><h4>미술 재료</h4>
+          <p>파스텔부터 클레이까지, 미술 재료의 모든 것!</p>
         </div>
       </div>
     </section>
